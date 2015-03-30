@@ -74,12 +74,14 @@ We also reuse the images kept in the disk cache if already there, if not in cach
 
 <p>and getting the images into the adapter for the "recyclerview" we do:</p>
 
-<pre><code> if(MySingleton.getInstance(getActivity()).getRequestQueue().getCache().get(url)!=null){
+<pre><code> url = imagesList.get(i).getImageUrl();
+ ...
+ if(MySingleton.getInstance(getActivity()).getRequestQueue().getCache().get(url)!=null){
                     Log.d(TAG, "&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;  found the image in diskcache");
                     bytes = MySingleton.getInstance(getActivity()).getRequestQueue().getCache().get(url).data;
                     bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                     mDataset.add(new ImageData(bmp));
-                } else {
+} else {
                     Log.d(TAG, "&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;  getting the image from the web");
                     // Request an Image response from the provided URL.
                     imageRequest = new ImageRequest( url,
