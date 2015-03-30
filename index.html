@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Test Images using Volley and RecyclerView by wrondon</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Test Images using Volley and RecyclerView</h1>
+        <p>William Rondón demo</p>
+
+        <p class="view"><a href="https://github.com/wrondon/TestImages">View the Project on GitHub <small>wrondon/TestImages</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/wrondon/TestImages/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/wrondon/TestImages/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/wrondon/TestImages">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview:</h1>
+
+<p>Here we are using the "recyclerview" component to show a list of images obtained from the internet (flickr).
+The internet connection is processed using the library "volley".
+We also reuse the images kept in the disk cache if already there, if not in cache we get the image from the web.</p>
+
+<p>This app show the usage of the testing library <strong>"espresso"</strong>, which is now part of the Android Support Repository.</p>
+
+<h2>
+<a id="code" class="anchor" href="#code" aria-hidden="true"><span class="octicon octicon-link"></span></a>Code:</h2>
+
+<p>Using the singleton pattern for the network request (volley) we do requests like this, to get the list of views</p>
+
+<div class="highlight highlight-java"><pre>queue <span class="pl-k">=</span> <span class="pl-smi">MySingleton</span><span class="pl-k">.</span>getInstance(getActivity()<span class="pl-k">.</span>getApplicationContext())<span class="pl-k">.</span>getRequestQueue();
+        <span class="pl-smi">String</span> url <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>https://api.flickr.com/services/feeds/photos_public.gne?tags=boston<span class="pl-pds">"</span></span>;
+
+        <span class="pl-c">// Request a string response from the provided URL. Get Images (list of urls)</span>
+        stringRequest <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">StringRequest</span>(<span class="pl-smi">Request</span><span class="pl-k">.</span><span class="pl-smi">Method</span><span class="pl-c1"><span class="pl-k">.</span>GET</span>, url,
+                <span class="pl-k">new</span> <span class="pl-smi">Response</span>.<span class="pl-k">Listener&lt;<span class="pl-smi">String</span>&gt;</span>() {
+                    <span class="pl-k">@Override</span>
+                    <span class="pl-k">public</span> <span class="pl-k">void</span> <span class="pl-en">onResponse</span>(<span class="pl-smi">String</span> <span class="pl-v">response</span>) {
+
+                        <span class="pl-k">try</span> {
+                            imagesList <span class="pl-k">=</span> (<span class="pl-k">ArrayList&lt;<span class="pl-smi">ImageData</span>&gt;</span>) parseXMLImageData(response);
+                            initDataset();
+                        } <span class="pl-k">catch</span> (<span class="pl-smi">XmlPullParserException</span> e) {
+                            e<span class="pl-k">.</span>printStackTrace();
+                        } <span class="pl-k">catch</span> (<span class="pl-smi">IOException</span> e) {
+                            e<span class="pl-k">.</span>printStackTrace();
+                        }
+                    }
+                }, <span class="pl-k">new</span> <span class="pl-smi">Response</span>.<span class="pl-smi">ErrorListener</span>() {
+            <span class="pl-k">@Override</span>
+            <span class="pl-k">public</span> <span class="pl-k">void</span> <span class="pl-en">onErrorResponse</span>(<span class="pl-smi">VolleyError</span> <span class="pl-v">error</span>) {
+                <span class="pl-smi">Log</span><span class="pl-k">.</span>d(<span class="pl-c1">TAG</span>, <span class="pl-s"><span class="pl-pds">"</span>Error XML url transfers. That didn't work!<span class="pl-pds">"</span></span>);
+            }
+        });
+        <span class="pl-c">// Set the tag on the request.</span>
+        stringRequest<span class="pl-k">.</span>setTag(<span class="pl-c1">TAG2</span>);
+        <span class="pl-c">// Add the request to the RequestQueue.</span>
+
+        <span class="pl-k">if</span> (<span class="pl-smi">MySingleton</span><span class="pl-k">.</span>getInstance(getActivity())<span class="pl-k">.</span>getRequestQueue()<span class="pl-k">!=</span><span class="pl-c1">null</span>){
+            <span class="pl-smi">MySingleton</span><span class="pl-k">.</span>getInstance(getActivity())<span class="pl-k">.</span>addToRequestQueue(stringRequest);
+        }</pre></div>
+
+<p>and getting the images into the adapter for the "recyclerview" we do:</p>
+
+<pre><code> if(MySingleton.getInstance(getActivity()).getRequestQueue().getCache().get(url)!=null){
+                    Log.d(TAG, "&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;  found the image in diskcache");
+                    bytes = MySingleton.getInstance(getActivity()).getRequestQueue().getCache().get(url).data;
+                    bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    mDataset.add(new ImageData(bmp));
+                } else {
+                    Log.d(TAG, "&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;  getting the image from the web");
+                    // Request an Image response from the provided URL.
+                    imageRequest = new ImageRequest( url,
+                            new Response.Listener&lt;Bitmap&gt;() {
+                                //////final String u = url;
+                                @Override
+                                public void onResponse(Bitmap bitmap) {
+                                    ///mImageView.setImageBitmap(bitmap);
+                                    Log.d(TAG, "&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;  processing response getting the image from the web");
+                                    mDataset.add(new ImageData(bitmap));
+                                    mRecyclerView.setVisibility(View.VISIBLE);
+                                    mProgressBar.setVisibility(View.GONE);
+                                    mAdapter.notifyDataSetChanged();
+                                }
+                            }, 0, 0, ImageView.ScaleType.FIT_CENTER,null,
+                            new Response.ErrorListener() {
+                                public void onErrorResponse(VolleyError error) {
+                                    Log.d(TAG, "Error during Image transfer. That didn't work!");
+                                }
+                            });
+                    // Set the tag on the request.
+                    imageRequest.setTag(TAG2);
+                    // Add the request to the RequestQueue.
+                    if (MySingleton.getInstance(getActivity()).getRequestQueue()!=null){
+                        MySingleton.getInstance(getActivity()).addToRequestQueue(imageRequest);
+                    }
+                }
+</code></pre>
+
+<h2>
+<a id="references" class="anchor" href="#references" aria-hidden="true"><span class="octicon octicon-link"></span></a>References:</h2>
+
+<p>Volley Library Usage:    <a href="http://developer.android.com/training/volley/index.html">http://developer.android.com/training/volley/index.html</a>
+   Recycler View: <a href="http://developer.android.com/training/material/lists-cards.html">http://developer.android.com/training/material/lists-cards.html</a></p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/wrondon">wrondon</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
