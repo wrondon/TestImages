@@ -27,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 
 import com.android.volley.Request;
@@ -72,6 +73,7 @@ public class RecyclerViewFragment extends Fragment {
     protected RadioButton mGridLayoutRadioButton;
 
     protected RecyclerView mRecyclerView;
+    protected ProgressBar mProgressBar;
     protected CustomAdapter mAdapter;
     protected RecyclerView.LayoutManager mLayoutManager;
     final protected ArrayList<ImageData> mDataset= new ArrayList<ImageData>();
@@ -121,7 +123,9 @@ public class RecyclerViewFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.recycler_view_frag, container, false);
         rootView.setTag(TAG);
 
+        mProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
         // BEGIN_INCLUDE(initializeRecyclerView)
+
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
 
         mRecyclerView.setHasFixedSize(true);
@@ -160,6 +164,8 @@ public class RecyclerViewFragment extends Fragment {
                 setRecyclerViewLayoutManager(LayoutManagerType.GRID_LAYOUT_MANAGER);
             }
         });
+
+        mRecyclerView.setVisibility(View.GONE);
 
         return rootView;
     }
@@ -222,12 +228,12 @@ public class RecyclerViewFragment extends Fragment {
                 url = imagesList.get(i).getImageUrl();
 
                 if(MySingleton.getInstance(getActivity()).getRequestQueue().getCache().get(url)!=null){
-                    System.out.println("sout   >>>>>>>>>>>>>>>>>>  found the image in diskcache");
+                    Log.d(TAG, ">>>>>>>>>>>>>>>>>>  found the image in diskcache");
                     bytes = MySingleton.getInstance(getActivity()).getRequestQueue().getCache().get(url).data;
                     bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                     mDataset.add(new ImageData(bmp));
                 } else {
-                    System.out.println("sout   >>>>>>>>>>>>>>>>>>  getting the image from the web");
+                    Log.d(TAG, ">>>>>>>>>>>>>>>>>>  getting the image from the web");
                     // Request an Image response from the provided URL.
                     imageRequest = new ImageRequest( url,
                             new Response.Listener<Bitmap>() {
@@ -235,8 +241,11 @@ public class RecyclerViewFragment extends Fragment {
                                 @Override
                                 public void onResponse(Bitmap bitmap) {
                                     ///mImageView.setImageBitmap(bitmap);
-                                    System.out.println("sout   >>>>>>>>>>>>>>>>>>  processing response getting the image from the web");
+                                    Log.d(TAG, ">>>>>>>>>>>>>>>>>>  processing response getting the image from the web");
                                     mDataset.add(new ImageData(bitmap));
+                                    mRecyclerView.setVisibility(View.VISIBLE);
+                                    mProgressBar.setVisibility(View.GONE);
+                                    mAdapter.notifyDataSetChanged();
                                 }
                             }, 0, 0, ImageView.ScaleType.FIT_CENTER,null,
                             new Response.ErrorListener() {
@@ -253,6 +262,10 @@ public class RecyclerViewFragment extends Fragment {
                 }
             }
         }
+        mRecyclerView.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.GONE);
+        mAdapter.notifyDataSetChanged();
+
     }
 
     @Override
